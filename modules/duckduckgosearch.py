@@ -10,7 +10,7 @@ def dictParser(result):
 
 
 def SearchCode(searchterm):
-    results = DDGS().text(searchterm, max_results=2)
+    results = DDGS().text(searchterm, max_results=10)
     totalUrsl = []
     for result in results:
         totalUrsl.append(dictParser(result))

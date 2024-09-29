@@ -1,5 +1,5 @@
-from modules.webCr import crawl_page, fetch_all
-from modules.contentExtractor import extract_content_goose, extract_content_newspaper
+from modules.webCr import crawl_page, fetch_all,crawl_and_extract_content
+# from modules.contentExtractor import extract_content_goose, extract_content_newspaper
 from modules.userintent import init_classifier, extract_intent
 from modules.embedding_search import load_model, generate_embeddings, build_faiss_index, search_faiss_index
 from modules.ranking import rank_pages
@@ -7,7 +7,9 @@ from modules.feedback import update_ranking_based_on_feedback
 from modules.cache import connect_redis, cache_results, get_cached_results
 from modules.duckduckgosearch import *
 import numpy as np
-def main():
+import asyncio
+
+async def main():
     # 1. Initialize components
     redis_conn = connect_redis()
     model = load_model()
@@ -23,19 +25,35 @@ def main():
 
     # 3. Extract content from the webpage
 
-    user_query = "Find the best machine learning tutorials"
+    user_query = "best north indian restaurants in Hyderabad"
 
     urls = SearchCode(user_query)
 
+    if not urls:
+        print("No search results found.")
+        return
 
+    print(f"Top 10 search URLs: {urls}")
 
+    # 4. Asynchronously crawl URLs and extract content
+    print("Crawling and extracting content from URLs...")
+    extracted_contents = await crawl_and_extract_content(urls)
 
+    # Filter out empty extractions
+    filtered_contents = [content for content in extracted_contents if content]
+    
+    # Ensure that there is at least some content extracted
+    if not filtered_contents:
+        print("No content could be extracted from the URLs.")
+        return
 
+    # 5. Generate embeddings for the content of each page
+    page_embeddings = [generate_embeddings(model, content) for content in filtered_contents]
 
-    content = extract_content_goose(urls[0])
+    # content = extract_content_goose(urls[0])
 
     # 4. Generate embeddings for the content
-    content_embedding = generate_embeddings(model, content)
+    #content_embedding = generate_embeddings(model, content)
 
     # 5. Get user query and understand intent
     
@@ -49,7 +67,8 @@ def main():
     cached_results = get_cached_results(redis_conn, user_query)
     if cached_results is None:
         # For demonstration, assume you have more embeddings for other pages
-        page_embeddings = [content_embedding]  # Replace with actual content embeddings
+        # page_embeddings = [content_embedding]  # Replace with actual content embeddings
+        
 
         # 7. Build FAISS index and search relevant content
         index = build_faiss_index(page_embeddings)
@@ -74,18 +93,17 @@ def main():
 
     # Get updated rankings based on feedback
     updated_scores = update_ranking_based_on_feedback(page_scores, user_clicks, dwell_times)
+    print(f"Updated Page Scores: {updated_scores}")
+
 
     # 10. Sort URLs based on updated rankings
     updated_indices = np.argsort(updated_scores)[::-1]
     updated_urls = [urls[i] for i in updated_indices]
     
-    print(f"Updated Page Scores: {updated_scores}")
     print(f"Updated Ranked URLs: {updated_urls}")
 
-
-
-    
     # print(f"Updated Ranking: {updated_ranking}")
 
 if __name__ == "__main__":
-    main()
+    # main()
+     asyncio.run(main())
