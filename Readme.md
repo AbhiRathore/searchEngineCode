@@ -1,3 +1,6 @@
+Python 3.10.12
+
+
 Install Redis:
 sudo apt update
 sudo apt install redis-server
@@ -7,3 +10,5 @@ sudo service redis-server start
 
 Check if Redis is running:
 redis-cli ping
+
+
