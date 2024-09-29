@@ -1,0 +1,12 @@
+requests==2.28.1
+beautifulsoup4==4.12.2
+aiohttp==3.8.4
+goose3==3.1.7
+newspaper3k==0.2.8
+transformers==4.33.0
+sentence-transformers==2.2.2
+faiss-cpu==1.7.3
+scikit-learn==1.2.2
+textstat==0.7.3
+redis==4.6.0
+duckduckgo-search==6.2.13
